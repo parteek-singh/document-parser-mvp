@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Document Parser UI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        h1 { margin-bottom: 0.5rem; }
+        form { margin-bottom: 2rem; }
+        label { display: block; margin-top: 1rem; }
+        select, input[type="file"] { margin-top: 0.3rem; }
+        button { margin-top: 1rem; padding: 0.5rem 1rem; cursor: pointer; }
+        pre {
+            background: #f4f4f4;
+            padding: 1rem;
+            border-radius: 6px;
+            max-height: 600px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .error { color: #b00020; font-weight: bold; }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.5rem;
+            background: #fafafa;
+        }
+        .card h2 {
+            margin-top: 0;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.5rem 1.5rem;
+        }
+        .field-label {
+            font-weight: bold;
+        }
+        .field-value {
+            margin-left: 0.25rem;
+        }
+        .muted {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Document Parser</h1>
+    <p>Upload a PDF and choose what you want to extract.</p>
+
+    <form action="/ui/upload" method="post" enctype="multipart/form-data">
+        <label>
+            PDF file:
+            <input type="file" name="file" accept="application/pdf" required>
+        </label>
+
+        <label>
+            Extraction type:
+            <select name="mode">
+                <option value="full" {% if mode == "full" %}selected{% endif %}>Full extract (text + sections + tables)</option>
+                <option value="dividend" {% if mode == "dividend" %}selected{% endif %}>Dividend info</option>
+                <option value="market" {% if mode == "market" %}selected{% endif %}>Market announcement summary</option>
+            </select>
+        </label>
+
+        <button type="submit">Upload & Extract</button>
+    </form>
+
+    {% if error %}
+        <div class="error">Error: {{ error }}</div>
+    {% endif %}
+
+    {% if result %}
+        {% if mode == "dividend" %}
+            <div class="card">
+                <h2>Dividend Summary</h2>
+                <div class="grid">
+                    <div>
+                        <span class="field-label">Entity:</span>
+                        <span class="field-value">{{ result.entity_name or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">Ticker:</span>
+                        <span class="field-value">{{ result.ticker or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">Security:</span>
+                        <span class="field-value">{{ result.security_description or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">Announcement date:</span>
+                        <span class="field-value">{{ result.announcement_date or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">Period end:</span>
+                        <span class="field-value">{{ result.period_end_date or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">Currency:</span>
+                        <span class="field-value">{{ result.currency or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">Amount / security:</span>
+                        <span class="field-value">
+                            {% if result.amount_per_security is not none %}
+                                {{ result.amount_per_security }} {{ result.currency }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="field-label">AUD equivalent:</span>
+                        <span class="field-value">
+                            {% if result.aud_equivalent_amount is not none %}
+                                {{ result.aud_equivalent_amount }} AUD
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="field-label">Franked %:</span>
+                        <span class="field-value">
+                            {% if result.franking_percent is not none %}
+                                {{ result.franking_percent }}%
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="field-label">Ex date:</span>
+                        <span class="field-value">{{ result.ex_date or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">Record date:</span>
+                        <span class="field-value">{{ result.record_date or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">Payment date:</span>
+                        <span class="field-value">{{ result.payment_date or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">DRP available:</span>
+                        <span class="field-value">
+                            {% if result.drp_available is sameas true %}
+                                Yes
+                            {% elif result.drp_available is sameas false %}
+                                No
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="field-label">DRP status:</span>
+                        <span class="field-value">{{ result.drp_status or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">DRP price:</span>
+                        <span class="field-value">
+                            {% if result.drp_price is not none %}
+                                {{ result.drp_price }} {{ result.drp_price_currency or "" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <p class="muted">Below is the raw JSON result from the API for debugging / integration.</p>
+            </div>
+
+        {% elif mode == "market" %}
+            <div class="card">
+                <h2>Market Announcement Summary</h2>
+                <div class="grid">
+                    <div>
+                        <span class="field-label">Ticker:</span>
+                        <span class="field-value">{{ result.ticker or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">Announcement type:</span>
+                        <span class="field-value">{{ result.announcement_type or "—" }}</span>
+                    </div>
+                    <div>
+                        <span class="field-label">Title:</span>
+                        <span class="field-value">{{ result.announcement_title or "—" }}</span>
+                    </div>
+                </div>
+                <div style="margin-top:1rem;">
+                    <span class="field-label">Summary:</span>
+                    <div class="field-value">
+                        {{ result.summary or "—" }}
+                    </div>
+                </div>
+                <p class="muted">Below is the raw JSON result from the API for debugging / integration.</p>
+            </div>
+
+        {% else %}
+            <div class="card">
+                <h2>Full Extract</h2>
+                <p class="muted">
+                    Showing sections and tables. Use the API directly for programmatic integration.
+                </p>
+            </div>
+        {% endif %}
+
+        <h2>Raw JSON</h2>
+        <pre>{{ result | tojson(indent=2) }}</pre>
+    {% endif %}
+</body>
+</html>

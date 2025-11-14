@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pymupdf
+python-multipart
+pdfplumber
+pydantic
+#openai    # or any other LLM client; this is optional
+jinja2
