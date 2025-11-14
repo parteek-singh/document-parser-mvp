@@ -36,6 +36,10 @@ templates = Jinja2Templates(directory="templates")
 #     kpis: List[KpiValue]
 
 
+@app.get("/")
+def home():
+    return {"status": "ok"}
+
 # ---------- PDF extraction endpoints ----------
 
 @app.post("/extract")
