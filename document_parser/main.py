@@ -1,5 +1,6 @@
 # main.py
 from typing import List
+from pathlib import Path
 
 from fastapi import FastAPI, UploadFile, File, Request, Form
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -17,8 +18,10 @@ app = FastAPI(
     version="1.0.0",
     description="PDF text extraction, sections, tables, market announcements & KPI extraction"
 )
-templates = Jinja2Templates(directory="templates")
+# templates = Jinja2Templates(directory="templates")
 
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # ---------- Models for KPI endpoint ----------
 
