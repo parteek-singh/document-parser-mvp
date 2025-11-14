@@ -31,7 +31,7 @@ templates = Jinja2Templates(directory="templates")
 #     kpis: List[KpiValue]
 
 
-@app.get("/")
+@app.get("/health")
 def home():
     return {"status": "ok"}
 
