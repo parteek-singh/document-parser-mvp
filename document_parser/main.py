@@ -1,20 +1,15 @@
 # main.py
 from typing import List
 
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-import tempfile
-
-from extractor import extract_pdf_text
-from market_announcement import extract_market_announcement, MarketAnnouncement
-# from kpi_extractor import KpiDefinition, KpiValue, extract_kpis_with_llm
-from dividend_extractor import extract_dividend_info, DividendInfo
-
-
 from fastapi import FastAPI, UploadFile, File, Request, Form
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+import tempfile
+
+from .extractor import extract_pdf_text
+from .dividend_extractor import extract_dividend_info, DividendInfo
+
 
 
 app = FastAPI(
@@ -68,27 +63,27 @@ async def extract_from_pdf(file: UploadFile = File(...)):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-@app.post("/extract/market-announcement", response_model=MarketAnnouncement)
-async def extract_market_announcement_from_pdf(file: UploadFile = File(...)):
-    """
-    Upload a market announcement PDF → get structured announcement fields.
-    """
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            content = await file.read()
-            tmp.write(content)
-            tmp_path = tmp.name
+# @app.post("/extract/market-announcement", response_model=MarketAnnouncement)
+# async def extract_market_announcement_from_pdf(file: UploadFile = File(...)):
+#     """
+#     Upload a market announcement PDF → get structured announcement fields.
+#     """
+#     try:
+#         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+#             content = await file.read()
+#             tmp.write(content)
+#             tmp_path = tmp.name
 
-        result = extract_pdf_text(tmp_path)
-        announcement = extract_market_announcement(
-            full_text=result["full_text"],
-            sections=result["sections"]
-        )
+#         result = extract_pdf_text(tmp_path)
+#         announcement = extract_market_announcement(
+#             full_text=result["full_text"],
+#             sections=result["sections"]
+#         )
 
-        return announcement
+#         return announcement
 
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+#     except Exception as e:
+#         return JSONResponse({"error": str(e)}, status_code=500)
 
 
 # ---------- KPI extraction endpoint (LLM-based) ----------
